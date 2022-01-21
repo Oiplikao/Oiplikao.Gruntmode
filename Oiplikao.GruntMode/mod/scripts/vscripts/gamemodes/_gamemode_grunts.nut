@@ -1,6 +1,5 @@
 global function GamemodeGrunts_Init
 
-
 /*
 Workflow:
 1. Loading screen
@@ -10,35 +9,20 @@ Workflow:
 1. Grunts should definitely respawn, pilots maybe not?
 1.? Pilot could spawn in a titan first
 
-Whatever just do a working draft first
-1. Loading screen
-1. Game chooses pilot, everyone else is a grunt
-1. Give grunts shit weapons, pilot keeps his stuff
-1. FFA spawnpoints for now
-1. Grunts have to kill the pilot, grunts respawn
-1. Pilot just has to survive lol will do for now
-
-
 Suggestions:
-1. Disable grunt minimap
 1. Announce pilot to mid-game connected clients
 1. Remove lunge melee from grunts
+1. Make grunt jump distance shitty (or disable completely)
+1. Make grunt weapons shit
+1. Randomized grunt loadouts
+1. Multiple pilots
 */
 
-//based mostly on the hidden
 void function GamemodeGrunts_Init()
 {
 	SetLoadoutGracePeriodEnabled( false ) // prevent modifying loadouts with grace period
 	SetWeaponDropsEnabled( false )
-	//SetRespawnsEnabled( false ) //grunts should definitely respawn
-	//Riff_ForceTitanAvailability( eTitanAvailability.Never )
-	//Riff_ForceBoostAvailability( eBoostAvailability.Disabled )
-	//Riff_ForceSetEliminationMode( eEliminationMode.Pilots )
 
-	//hide n seek has smoother intro i think
-	//man i dont know anymore, let's just have infection-like intro for now
-	//ClassicMP_SetCustomIntro( GamemodeGruntsIntroSetup, 0.0 )
-	//ClassicMP_SetCustomIntro( ClassicMP_DefaultNoIntro_Setup, ClassicMP_DefaultNoIntro_GetLength() )
 	ClassicMP_ForceDisableEpilogue( true )
 
 	AddCallback_OnClientConnected( GruntsPlayerConnected )
@@ -46,18 +30,8 @@ void function GamemodeGrunts_Init()
 	AddCallback_OnPlayerKilled( GruntsOnPlayerKilled )
 	AddCallback_GameStateEnter( eGameState.Playing, GruntsStartUp )
 
-	
-	//AddCallback_GameStateEnter( eGameState.Postmatch, RemoveHidden )
 	SetTimeoutWinnerDecisionFunc( TimeoutCheckSurvivors )
-
-	//thread PredatorMain()
 }
-/*
-void function GamemodeGruntsIntroSetup()
-{
-	AddCallback_GameStateEnter( eGameState.Prematch, GruntsIntroPrematch )
-}
-*/
 
 /* Droppod spawning from Hide n seek. Definitely need this for grunts
 
@@ -78,20 +52,7 @@ else
 SpawnPlayersInDropPod( seekers, podSpawn.GetOrigin(), podSpawn.GetAngles() )
 	
 */
-/*
-void function GruntsIntroPrematch()
-{
-	ClassicMP_OnIntroStarted()
-	
-	foreach ( entity player in GetPlayerArray() )
-		AddPlayerToGruntsIntro( player )
-		
-	//-! why?
-	// this intro is mostly done in playing, so just finish the intro up now and we can do fully custom logic from here
-	//wait 2.5
-	ClassicMP_OnIntroFinished()
-}
-*/
+
 void function GruntsPlayerConnected ( entity player )
 {		
 	SetTeam( player, GRUNTS_TEAM_GRUNTS )
@@ -99,7 +60,7 @@ void function GruntsPlayerConnected ( entity player )
 
 void function GruntsOnPlayerRespawned( entity player )
 {
-	// so it doesnt affect the possible pilot
+	// so gruntification doesnt affect the possible pilot
 	if( GetGameState() != eGameState.Playing )
 		return 
 
@@ -119,50 +80,40 @@ void function UpdateGruntLoadout ( entity player )
 	Remote_CallFunction_NonReplay( player, "ServerCallback_DisableMinimap" )
 	
 	//player.SetPlayerSettingsWithMods( player.GetPlayerSettings(), [ /*"disable_wallrun", "disable_doublejump",*/ "disable_slide"])
+	//couldn't disable sliding through ClassMods so I made a separate class
+	//except to make it load i have to replace the whole classes.txt import file so it'll conflict with other modes
+	//keyvalue method didnt work probably because each line starts the same
 	player.SetPlayerSettingsWithMods( "pilot_grunt", [] )
-	thread SetAirAccelerationAFrameLater( player )
 	
-	//player.SetModel($"models/humans/grunts/imc_grunt_rifle.mdl")
-
 	foreach ( entity weapon in player.GetOffhandWeapons() )
 		player.TakeWeaponNow( weapon.GetWeaponClassName() )
 		
 	foreach ( entity weapon in player.GetMainWeapons() )
 		player.TakeWeaponNow( weapon.GetWeaponClassName() )
 
-
-	//-! TODO: randomized grunt loadouts
 	try {
 		player.GiveWeapon("mp_weapon_rspn101")
 		//player.GiveOffhandWeapon("mp_ability_cloak", OFFHAND_SPECIAL )
 		player.GiveOffhandWeapon("mp_weapon_frag_grenade", OFFHAND_ORDNANCE )
-		//player.GiveOffhandWeapon( "melee_pilot_emptyhanded", OFFHAND_MELEE )
+		player.GiveOffhandWeapon( "melee_pilot_emptyhanded", OFFHAND_MELEE )
 	} catch (ex) {}
-}
-
-//for some reason it doesnt apply after respawning but does work on game start
-void function SetAirAccelerationAFrameLater( entity player )
-{
-	WaitFrame()
-	player.kv.airacceleration = 50
 }
 
 void function OnPlayerRespawned_Threaded( entity player )
 {
-	// -! Do I even need this?
-	// bit of a hack, need to rework earnmeter code to have better support for completely disabling it
-	// rn though this just waits for earnmeter code to set the mode before we set it back
 	WaitFrame()
 	if ( IsValid( player ) )
+	{
+		//for some reason it doesnt apply after respawning but does work on game start
+		player.kv.airacceleration = 50
+		// -! Do I even need this?
+		// bit of a hack, need to rework earnmeter code to have better support for completely disabling it
+		// rn though this just waits for earnmeter code to set the mode before we set it back
 		PlayerEarnMeter_SetMode( player, eEarnMeterMode.DISABLED )
+	}
 }
 
 void function GruntsStartUp()
-{
-	thread GruntsStartUpDelayed()
-}
-
-void function GruntsStartUpDelayed()
 {
 	//wait 10.0 + RandomFloat( 5.0 )
 	
@@ -249,17 +200,6 @@ void function GruntsOnPlayerKilled( entity victim, entity attacker, var damageIn
 		SetWinner( GRUNTS_TEAM_GRUNTS )
 	}
 }
-
-/*
-void function RemoveHidden()
-{
-	foreach (entity player in GetPlayerArray())
-	{
-		if (player.GetTeam() == TEAM_IMC && player != null)
-			player.kv.VisibilityFlags = ENTITY_VISIBLE_TO_EVERYONE
-	}
-}
-*/
 
 int function TimeoutCheckSurvivors()
 {
