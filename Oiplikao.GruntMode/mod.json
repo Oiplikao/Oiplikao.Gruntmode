@@ -1,0 +1,36 @@
+{
+	"ApiId" : "Oiplikao.Gruntmode",
+	"Name": "Gruntmode",
+	"Description": "Grunts",
+	"Version": "1.0.0",
+	"Authors": ["Oiplikao"],
+	"LoadPriority": 3,
+	"RequiredOnClient": true,
+	"Scripts":
+	[
+		{
+			"Path": "gamemodes/sh_gamemode_grunts.nut",
+			"RunOn": "( CLIENT || SERVER ) && MP",
+			"ServerCallback":
+			{
+				"Before": "Sh_GamemodeGrunts_Init"
+			},
+			"ClientCallback":
+			{
+				"Before": "Sh_GamemodeGrunts_Init"
+			}
+		},
+		{
+			"Path": "gamemodes/_gamemode_grunts.nut",
+			"RunOn": "SERVER && MP"
+		},
+		{
+			"Path": "gamemodes/cl_gamemode_grunts.nut",
+			"RunOn": "CLIENT && MP"
+		}
+	],
+	
+	"Localisation": [
+		"resource/gruntmode_%language%.txt"
+	]
+}

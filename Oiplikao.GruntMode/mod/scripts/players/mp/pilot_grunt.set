@@ -1,0 +1,19 @@
+#base "pilot_mp.set"
+"pilot_grunt"
+{
+	"global"
+	{
+		//hands might be too fancy, will do for now
+		//or not, forgot they're not loaded in MP
+		//armsmodel				"models/weapons/arms/pov_mlt_hero_jack.mdl"
+		bodymodel			    "models/humans/grunts/imc_grunt_rifle.mdl"
+		
+		slide					0
+		wallrun					0
+		doublejump				0
+		
+		sound_standToCrouch		"Pilot_CrouchDown_SP_1P"
+		sound_crouchToStand		"Pilot_CrouchStand_SP_1P"
+		footstep_type          	"human"
+	}
+}
