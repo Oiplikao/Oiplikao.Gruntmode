@@ -1,4 +1,6 @@
 global function GamemodeGrunts_Init
+global function DevTurnIntoGrunt
+global function DevTurnIntoPilot
 
 /*
 Workflow:
@@ -204,4 +206,15 @@ void function GruntsOnPlayerKilled( entity victim, entity attacker, var damageIn
 int function TimeoutCheckSurvivors()
 {
 	return GRUNTS_TEAM_PILOTS
+}
+
+void function DevTurnIntoGrunt( entity player )
+{
+	player.SetTeam( GRUNTS_TEAM_GRUNTS )
+	UpdateGruntLoadout( player )
+}
+
+void function DevTurnIntoPilot( entity player )
+{
+	MakePlayerPilot( player )
 }
